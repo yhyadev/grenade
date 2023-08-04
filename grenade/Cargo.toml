@@ -1,0 +1,6 @@
+[package]
+name = "grenade"
+description = "Web applications framework with a focus on ease-to-use and speed"
+license = "MIT"
+repository = "https://github.com/yhyadev/grenade"
+version = "0.0.1"
