@@ -1,8 +1,5 @@
 [workspace]
 members = [
     "grenade",
-<<<<<<< HEAD
-=======
     "examples/*"
->>>>>>> 7f1e43f (feat: make single threaded routes handling)
 ]

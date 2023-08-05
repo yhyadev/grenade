@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-use std::net::TcpListener;
-
-pub struct App {}
-
-impl App {
-    pub fn build() -> App {
-        App {}
-=======
 use context::Context;
 use route::Route;
 
@@ -76,18 +67,11 @@ impl App {
             path: path.to_string(),
             handler: Box::new(handler),
         })
->>>>>>> 7f1e43f (feat: make single threaded routes handling)
     }
 
     pub fn listen(&self, port: u16) -> std::io::Result<()> {
         let listener = TcpListener::bind(format!("127.0.0.1:{}", port))?;
 
-<<<<<<< HEAD
-        for stream in listener.incoming() {}
-
-        Ok(())
-    }
-=======
         for stream in listener.incoming() {
             self.find_handler(stream.unwrap())
         }
@@ -121,5 +105,4 @@ impl App {
             stream.flush().unwrap();
         }
     }
->>>>>>> 7f1e43f (feat: make single threaded routes handling)
 }
