@@ -12,12 +12,14 @@ pub struct App {
 }
 
 impl App {
+    /// Builds an app instance
     pub fn build() -> App {
         App {
             routes: HashMap::new(),
         }
     }
 
+    /// Pushes to routes with a method "POST"
     pub fn post<F>(&mut self, path: &str, handler: F)
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
@@ -32,6 +34,7 @@ impl App {
         );
     }
 
+    /// Pushes to routes with a method "GET"
     pub fn get<F>(&mut self, path: &str, handler: F)
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
@@ -46,6 +49,7 @@ impl App {
         );
     }
 
+    /// Pushes to routes with a method "PUT"
     pub fn put<F>(&mut self, path: &str, handler: F)
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
@@ -60,6 +64,7 @@ impl App {
         );
     }
 
+    /// Pushes to routes with a method "PATCH"
     pub fn patch<F>(&mut self, path: &str, handler: F)
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
@@ -74,6 +79,7 @@ impl App {
         );
     }
 
+    /// Pushes to routes with a method "DELETE"
     pub fn delete<F>(&mut self, path: &str, handler: F)
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
@@ -88,6 +94,7 @@ impl App {
         );
     }
 
+    /// Starts the listening to requests
     pub fn listen(&self, port: u16) -> std::io::Result<()> {
         let listener = TcpListener::bind(format!("127.0.0.1:{}", port))?;
         let mut pool = Pool::new();
@@ -110,14 +117,18 @@ impl App {
             Some(Ok(line)) => line,
             _ => "".to_string(),
         };
-        let request_line = request_line.split(" ").collect::<Vec<&str>>();
+        let request_line = request_line.split(' ').collect::<Vec<&str>>();
 
-        let method = request_line.get(0).unwrap_or(&"").to_string();
+        // "GET" /
+        let method = request_line.first().unwrap_or(&"").to_string();
+
+        // GET "/"
         let path = request_line.get(1).unwrap_or(&"").to_string();
 
         if let Some(route) = self.routes.get(&path) {
             if route.method == method {
                 let response = (route.handler)(Context {});
+                // TODO: Handle more other than String
                 let response = format!(
                     "{}\r\nContent-Length: {}\r\n\r\n{}",
                     "HTTP/1.1 200 OK",
