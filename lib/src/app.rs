@@ -1,79 +1,103 @@
 use context::Context;
 use route::Route;
 
+use std::collections::HashMap;
 use std::io::{prelude::*, BufReader};
 use std::net::{TcpListener, TcpStream};
 
+use pond::Pool;
+
 pub struct App {
-    routes: Vec<Route>,
+    routes: HashMap<String, Route>,
 }
 
 impl App {
     pub fn build() -> App {
-        App { routes: Vec::new() }
+        App {
+            routes: HashMap::new(),
+        }
     }
 
     pub fn post<F>(&mut self, path: &str, handler: F)
     where
-        F: Fn(Context) -> String + Send + 'static,
+        F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.push(Route {
-            method: String::from("POST"),
-            path: path.to_string(),
-            handler: Box::new(handler),
-        })
+        self.routes.insert(
+            path.to_string(),
+            Route {
+                method: String::from("POST"),
+                path: path.to_string(),
+                handler: Box::new(handler),
+            },
+        );
     }
 
     pub fn get<F>(&mut self, path: &str, handler: F)
     where
-        F: Fn(Context) -> String + Send + 'static,
+        F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.push(Route {
-            method: String::from("GET"),
-            path: path.to_string(),
-            handler: Box::new(handler),
-        })
+        self.routes.insert(
+            path.to_string(),
+            Route {
+                method: String::from("GET"),
+                path: path.to_string(),
+                handler: Box::new(handler),
+            },
+        );
     }
-
 
     pub fn put<F>(&mut self, path: &str, handler: F)
     where
-        F: Fn(Context) -> String + Send + 'static,
+        F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.push(Route {
-            method: String::from("PUT"),
-            path: path.to_string(),
-            handler: Box::new(handler),
-        })
+        self.routes.insert(
+            path.to_string(),
+            Route {
+                method: String::from("PUT"),
+                path: path.to_string(),
+                handler: Box::new(handler),
+            },
+        );
     }
-    
+
     pub fn patch<F>(&mut self, path: &str, handler: F)
     where
-        F: Fn(Context) -> String + Send + 'static,
+        F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.push(Route {
-            method: String::from("PATCH"),
-            path: path.to_string(),
-            handler: Box::new(handler),
-        })
+        self.routes.insert(
+            path.to_string(),
+            Route {
+                method: String::from("PATCH"),
+                path: path.to_string(),
+                handler: Box::new(handler),
+            },
+        );
     }
-    
+
     pub fn delete<F>(&mut self, path: &str, handler: F)
     where
-        F: Fn(Context) -> String + Send + 'static,
+        F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.push(Route {
-            method: String::from("DELETE"),
-            path: path.to_string(),
-            handler: Box::new(handler),
-        })
+        self.routes.insert(
+            path.to_string(),
+            Route {
+                method: String::from("DELETE"),
+                path: path.to_string(),
+                handler: Box::new(handler),
+            },
+        );
     }
 
     pub fn listen(&self, port: u16) -> std::io::Result<()> {
         let listener = TcpListener::bind(format!("127.0.0.1:{}", port))?;
+        let mut pool = Pool::new();
 
         for stream in listener.incoming() {
-            self.find_handler(stream.unwrap())
+            pool.scoped(|s| {
+                s.execute(move || {
+                    self.find_handler(stream.unwrap());
+                });
+            })
         }
 
         Ok(())
@@ -82,27 +106,28 @@ impl App {
     fn find_handler(&self, mut stream: TcpStream) {
         let buf_reader = BufReader::new(&mut stream);
 
-        let request_line = buf_reader.lines().next().unwrap().unwrap();
+        let request_line = match buf_reader.lines().next() {
+            Some(Ok(line)) => line,
+            _ => "".to_string(),
+        };
         let request_line = request_line.split(" ").collect::<Vec<&str>>();
 
-        let method = request_line.get(0).unwrap();
-        let path = request_line.get(1).unwrap();
+        let method = request_line.get(0).unwrap_or(&"").to_string();
+        let path = request_line.get(1).unwrap_or(&"").to_string();
 
-        if let Some(route) = self
-            .routes
-            .iter()
-            .find(|r| r.method.as_str() == *method && r.path.as_str() == *path)
-        {
-            let response = (route.handler)(Context {});
-            let response = format!(
-                "{}\r\nContent-Length: {}\r\n\r\n{}",
-                "HTTP/1.1 200 OK",
-                response.len(),
-                response
-            );
+        if let Some(route) = self.routes.get(&path) {
+            if route.method == method {
+                let response = (route.handler)(Context {});
+                let response = format!(
+                    "{}\r\nContent-Length: {}\r\n\r\n{}",
+                    "HTTP/1.1 200 OK",
+                    response.len(),
+                    response
+                );
 
-            stream.write_all(response.as_bytes()).unwrap();
-            stream.flush().unwrap();
+                stream.write_all(response.as_bytes()).unwrap();
+                stream.flush().unwrap();
+            }
         }
     }
 }

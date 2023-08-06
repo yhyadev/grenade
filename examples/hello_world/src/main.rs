@@ -9,5 +9,5 @@ fn main() {
 
     app.get("/", hello_world);
 
-    let _ = app.listen(8080);
+    app.listen(8080).unwrap();
 }

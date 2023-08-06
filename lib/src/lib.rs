@@ -1,3 +1,5 @@
+extern crate pond;
+
 mod app;
 pub use app::*;
 
