@@ -4,7 +4,7 @@ description = "Web applications framework with a focus on ease-to-use and speed"
 license = "MIT"
 readme = "../README.md"
 repository = "https://github.com/yhyadev/grenade"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies]
 pond = "0.3"
