@@ -127,16 +127,15 @@ impl App {
 
         if let Some(route) = self.routes.get(&path) {
             if route.method == method {
-                let response = (route.handler)(Context {});
+                let response = (route.handler)(Context::new(&mut stream));
                 // TODO: Handle more other than String
                 let response = format!(
-                    "{}\r\nContent-Length: {}\r\n\r\n{}",
-                    "HTTP/1.1 200 OK",
+                    "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
                     response.len(),
                     response
                 );
 
-                stream.write_all(response.as_bytes()).unwrap();
+                stream.write(response.as_bytes()).unwrap();
                 stream.flush().unwrap();
             }
         }
