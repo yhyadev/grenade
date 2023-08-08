@@ -138,6 +138,16 @@ impl App {
                 stream.write(response.as_bytes()).unwrap();
                 stream.flush().unwrap();
             }
+        } else {
+            let response = format!("Cannot {} {}", method, path);
+            let response = format!(
+                "HTTP/1.1 404\r\nContent-Length: {}\r\n\r\n{}",
+                response.len(),
+                response
+            );
+
+            stream.write(response.as_bytes()).unwrap();
+            stream.flush().unwrap();
         }
     }
 }
