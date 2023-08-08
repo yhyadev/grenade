@@ -142,7 +142,6 @@ impl App {
         if let Some(route) = self.routes.get(&path) {
             if route.method == method {
                 let response = (route.handler)(Context::new(&mut stream));
-                // TODO: Handle more other than String
                 let response = format!(
                     "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
                     response.len(),
