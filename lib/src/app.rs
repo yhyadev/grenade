@@ -13,6 +13,13 @@ pub struct App {
 
 impl App {
     /// Builds an app instance
+    ///
+    /// # Example
+    ///
+    /// ```rust 
+    /// let mut app = grenade::App::build();
+    /// ```
+    /// 
     pub fn build() -> App {
         App {
             routes: HashMap::new(),
@@ -94,7 +101,14 @@ impl App {
         );
     }
 
-    /// Starts the listening to requests
+    /// Starts the listening to requests on a specifiec port
+    ///
+    /// # Example
+    ///
+    /// ```rust 
+    /// app.listen(8080); // Starts to listen to "127.0.0.1:8080"
+    /// ````
+    ///
     pub fn listen(&self, port: u16) -> std::io::Result<()> {
         let listener = TcpListener::bind(format!("127.0.0.1:{}", port))?;
         let mut pool = Pool::new();
