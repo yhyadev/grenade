@@ -1,4 +1,5 @@
 //! # Grenade Documentation
+//!
 //! Welcome to the documentation of Grenade!
 //!
 //! # Usage
