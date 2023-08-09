@@ -1,4 +1,5 @@
 use context::Context;
+use path::DynamicPath;
 use route::Route;
 use router::Router;
 
@@ -9,7 +10,7 @@ use std::net::{TcpListener, TcpStream};
 use pond::Pool;
 
 pub struct App {
-    routes: HashMap<String, Route>,
+    routes: HashMap<DynamicPath, Route>,
 }
 
 impl App {
@@ -33,10 +34,9 @@ impl App {
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
         self.routes.insert(
-            path.to_string(),
+            DynamicPath::parse(path),
             Route {
                 method: String::from("POST"),
-                path: path.to_string(),
                 handler: Box::new(handler),
             },
         );
@@ -48,10 +48,9 @@ impl App {
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
         self.routes.insert(
-            path.to_string(),
+            DynamicPath::parse(path),
             Route {
                 method: String::from("GET"),
-                path: path.to_string(),
                 handler: Box::new(handler),
             },
         );
@@ -63,10 +62,9 @@ impl App {
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
         self.routes.insert(
-            path.to_string(),
+            DynamicPath::parse(path),
             Route {
                 method: String::from("PUT"),
-                path: path.to_string(),
                 handler: Box::new(handler),
             },
         );
@@ -78,10 +76,9 @@ impl App {
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
         self.routes.insert(
-            path.to_string(),
+            DynamicPath::parse(path),
             Route {
                 method: String::from("PATCH"),
-                path: path.to_string(),
                 handler: Box::new(handler),
             },
         );
@@ -93,10 +90,9 @@ impl App {
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
         self.routes.insert(
-            path.to_string(),
+            DynamicPath::parse(path),
             Route {
                 method: String::from("DELETE"),
-                path: path.to_string(),
                 handler: Box::new(handler),
             },
         );
@@ -105,7 +101,8 @@ impl App {
     /// Binds specific router and pushes its routes to the main routes
     pub fn bind(&mut self, path: &str, router: Router) {
         for (route_path, route) in router.to_routes() {
-            self.routes.insert(path.to_string() + &route_path, route);
+            self.routes
+                .insert(DynamicPath::parse(&format!("{}{}", path, route_path.to_string())), route);
         }
     }
 
@@ -145,9 +142,9 @@ impl App {
         let method = request_line.first().unwrap_or(&"").to_string();
 
         // GET "/"
-        let path = request_line.get(1).unwrap_or(&"").to_string();
+        let path = request_line.get(1).unwrap_or(&"");
 
-        if let Some(route) = self.routes.get(&path) {
+        if let Some(route) = self.routes.get(&DynamicPath::parse(path)) {
             if route.method == method {
                 let response = (route.handler)(Context::new(&mut stream));
                 let response = format!(

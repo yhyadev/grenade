@@ -32,6 +32,8 @@
 mod app;
 pub use app::*;
 
+mod path;
+
 mod context;
 pub use context::*;
 

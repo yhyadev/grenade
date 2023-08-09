@@ -1,10 +1,11 @@
+use path::DynamicPath;
 use context::Context;
 use route::Route;
 
 use std::collections::HashMap;
 
 pub struct Router {
-    routes: HashMap<String, Route>,
+    routes: HashMap<DynamicPath, Route>,
 }
 
 impl Router {
@@ -28,10 +29,9 @@ impl Router {
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
         self.routes.insert(
-            path.to_string(),
+            DynamicPath::parse(path),
             Route {
                 method: String::from("POST"),
-                path: path.to_string(),
                 handler: Box::new(handler),
             },
         );
@@ -43,10 +43,9 @@ impl Router {
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
         self.routes.insert(
-            path.to_string(),
+            DynamicPath::parse(path),
             Route {
                 method: String::from("GET"),
-                path: path.to_string(),
                 handler: Box::new(handler),
             },
         );
@@ -58,10 +57,9 @@ impl Router {
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
         self.routes.insert(
-            path.to_string(),
+            DynamicPath::parse(path),
             Route {
                 method: String::from("PUT"),
-                path: path.to_string(),
                 handler: Box::new(handler),
             },
         );
@@ -73,10 +71,9 @@ impl Router {
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
         self.routes.insert(
-            path.to_string(),
+            DynamicPath::parse(path),
             Route {
                 method: String::from("PATCH"),
-                path: path.to_string(),
                 handler: Box::new(handler),
             },
         );
@@ -88,17 +85,16 @@ impl Router {
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
         self.routes.insert(
-            path.to_string(),
+            DynamicPath::parse(path),
             Route {
                 method: String::from("DELETE"),
-                path: path.to_string(),
                 handler: Box::new(handler),
             },
         );
     }
 
     /// Transforms the router to the routes made in it
-    pub fn to_routes(self) -> HashMap<String, Route> {
+    pub fn to_routes(self) -> HashMap<DynamicPath, Route> {
         self.routes
     }
 }
