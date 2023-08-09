@@ -1,5 +1,6 @@
 use context::Context;
 use route::Route;
+use router::Router;
 
 use std::collections::HashMap;
 use std::io::{prelude::*, BufReader};
@@ -16,10 +17,10 @@ impl App {
     ///
     /// # Example
     ///
-    /// ```rust 
-    /// let mut app = grenade::App::build();
+    /// ```rust
+    /// let mut app = App::build();
     /// ```
-    /// 
+    ///
     pub fn build() -> App {
         App {
             routes: HashMap::new(),
@@ -101,11 +102,18 @@ impl App {
         );
     }
 
+    /// Binds specific router and pushes its routes to the main routes
+    pub fn bind(&mut self, path: &str, router: Router) {
+        for (route_path, route) in router.to_routes() {
+            self.routes.insert(path.to_string() + &route_path, route);
+        }
+    }
+
     /// Starts the listening to requests on a specifiec port
     ///
     /// # Example
     ///
-    /// ```rust 
+    /// ```rust
     /// app.listen(8080); // Starts to listen to "127.0.0.1:8080"
     /// ````
     ///
