@@ -9,6 +9,7 @@ use std::net::{TcpListener, TcpStream};
 
 use pond::Pool;
 
+/// App structure for making a new web application
 pub struct App {
     routes: HashMap<DynamicPath, Route>,
 }
@@ -99,10 +100,19 @@ impl App {
     }
 
     /// Binds specific router and pushes its routes to the main routes
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// app.bind("/users", router);
+    /// ```
+    ///
     pub fn bind(&mut self, path: &str, router: Router) {
         for (route_path, route) in router.to_routes() {
-            self.routes
-                .insert(DynamicPath::parse(&format!("{}{}", path, route_path.to_string())), route);
+            self.routes.insert(
+                DynamicPath::parse(&format!("{}{}", path, route_path.to_string())),
+                route,
+            );
         }
     }
 

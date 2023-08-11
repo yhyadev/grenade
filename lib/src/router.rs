@@ -4,6 +4,20 @@ use route::Route;
 
 use std::collections::HashMap;
 
+/// A Router that used to store a collection of routes
+/// and then it can be bind to the main routes in some app
+///
+/// # Example
+///
+/// ```rust 
+/// let mut router = Router::new();
+///
+/// router.get("/", ...);
+/// router.post("/", ...);
+///
+/// app.bind("/users", router);
+/// ```
+///
 pub struct Router {
     routes: HashMap<DynamicPath, Route>,
 }
