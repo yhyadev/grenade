@@ -2,8 +2,6 @@ use path::DynamicPath;
 use context::Context;
 use route::Route;
 
-use std::collections::HashMap;
-
 /// A Router that used to store a collection of routes
 /// and then it can be bind to the main routes in some app
 ///
@@ -19,7 +17,7 @@ use std::collections::HashMap;
 /// ```
 ///
 pub struct Router {
-    routes: HashMap<DynamicPath, Route>,
+    routes: Vec<Route>,
 }
 
 impl Router {
@@ -33,7 +31,7 @@ impl Router {
     ///
     pub fn new() -> Router {
         Router {
-            routes: HashMap::new(),
+            routes: Vec::new(),
         }
     }
 
@@ -42,9 +40,9 @@ impl Router {
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.insert(
-            DynamicPath::parse(path),
+        self.routes.push(
             Route {
+                path: DynamicPath::parse(path),
                 method: String::from("POST"),
                 handler: Box::new(handler),
             },
@@ -56,9 +54,9 @@ impl Router {
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.insert(
-            DynamicPath::parse(path),
+        self.routes.push(
             Route {
+                path: DynamicPath::parse(path),
                 method: String::from("GET"),
                 handler: Box::new(handler),
             },
@@ -70,9 +68,9 @@ impl Router {
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.insert(
-            DynamicPath::parse(path),
+        self.routes.push(
             Route {
+                path: DynamicPath::parse(path),
                 method: String::from("PUT"),
                 handler: Box::new(handler),
             },
@@ -84,9 +82,9 @@ impl Router {
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.insert(
-            DynamicPath::parse(path),
+        self.routes.push(
             Route {
+                path: DynamicPath::parse(path),
                 method: String::from("PATCH"),
                 handler: Box::new(handler),
             },
@@ -98,9 +96,9 @@ impl Router {
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.insert(
-            DynamicPath::parse(path),
+        self.routes.push(
             Route {
+                path: DynamicPath::parse(path),
                 method: String::from("DELETE"),
                 handler: Box::new(handler),
             },
@@ -108,7 +106,7 @@ impl Router {
     }
 
     /// Transforms the router to the routes made in it
-    pub fn to_routes(self) -> HashMap<DynamicPath, Route> {
+    pub fn to_routes(self) -> Vec<Route> {
         self.routes
     }
 }

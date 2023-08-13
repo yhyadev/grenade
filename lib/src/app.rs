@@ -11,7 +11,7 @@ use pond::Pool;
 
 /// App structure for making a new web application
 pub struct App {
-    routes: HashMap<DynamicPath, Route>,
+    routes: Vec<Route>,
 }
 
 impl App {
@@ -24,9 +24,7 @@ impl App {
     /// ```
     ///
     pub fn build() -> App {
-        App {
-            routes: HashMap::new(),
-        }
+        App { routes: Vec::new() }
     }
 
     /// Pushes to routes with a method "POST"
@@ -34,13 +32,11 @@ impl App {
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.insert(
-            DynamicPath::parse(path),
-            Route {
-                method: String::from("POST"),
-                handler: Box::new(handler),
-            },
-        );
+        self.routes.push(Route {
+            path: DynamicPath::parse(path),
+            method: String::from("POST"),
+            handler: Box::new(handler),
+        });
     }
 
     /// Pushes to routes with a method "GET"
@@ -48,13 +44,11 @@ impl App {
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.insert(
-            DynamicPath::parse(path),
-            Route {
-                method: String::from("GET"),
-                handler: Box::new(handler),
-            },
-        );
+        self.routes.push(Route {
+            path: DynamicPath::parse(path),
+            method: String::from("GET"),
+            handler: Box::new(handler),
+        });
     }
 
     /// Pushes to routes with a method "PUT"
@@ -62,13 +56,11 @@ impl App {
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.insert(
-            DynamicPath::parse(path),
-            Route {
-                method: String::from("PUT"),
-                handler: Box::new(handler),
-            },
-        );
+        self.routes.push(Route {
+            path: DynamicPath::parse(path),
+            method: String::from("PUT"),
+            handler: Box::new(handler),
+        });
     }
 
     /// Pushes to routes with a method "PATCH"
@@ -76,13 +68,11 @@ impl App {
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.insert(
-            DynamicPath::parse(path),
-            Route {
-                method: String::from("PATCH"),
-                handler: Box::new(handler),
-            },
-        );
+        self.routes.push(Route {
+            path: DynamicPath::parse(path),
+            method: String::from("PATCH"),
+            handler: Box::new(handler),
+        });
     }
 
     /// Pushes to routes with a method "DELETE"
@@ -90,13 +80,11 @@ impl App {
     where
         F: Fn(Context) -> String + Send + Sync + 'static,
     {
-        self.routes.insert(
-            DynamicPath::parse(path),
-            Route {
-                method: String::from("DELETE"),
-                handler: Box::new(handler),
-            },
-        );
+        self.routes.push(Route {
+            path: DynamicPath::parse(path),
+            method: String::from("DELETE"),
+            handler: Box::new(handler),
+        });
     }
 
     /// Binds specific router and pushes its routes to the main routes
@@ -108,11 +96,10 @@ impl App {
     /// ```
     ///
     pub fn bind(&mut self, path: &str, router: Router) {
-        for (route_path, route) in router.to_routes() {
-            self.routes.insert(
-                DynamicPath::parse(&format!("{}{}", path, route_path.to_string())),
-                route,
-            );
+        for mut route in router.to_routes() {
+            route.path = DynamicPath::parse(&format!("{}{}", path, route.path.to_string()));
+
+            self.routes.push(route)
         }
     }
 
@@ -154,19 +141,27 @@ impl App {
         // GET "/"
         let path = request_line.get(1).unwrap_or(&"");
 
-        if let Some(route) = self.routes.get(&DynamicPath::parse(path)) {
-            if route.method == method {
-                let response = (route.handler)(Context::new(&mut stream));
-                let response = format!(
-                    "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
-                    response.len(),
-                    response
-                );
+        let mut responed = false;
 
-                stream.write(response.as_bytes()).unwrap();
-                stream.flush().unwrap();
-            }
-        } else {
+        for route in self
+            .routes
+            .iter()
+            .filter(|r| r.path == DynamicPath::parse(path) && r.method == method)
+        {
+            let response = (route.handler)(Context::new(&mut stream));
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
+                response.len(),
+                response
+            );
+
+            stream.write(response.as_bytes()).unwrap();
+            stream.flush().unwrap();
+
+            responed = true;
+        }
+
+        if !responed {
             let response = format!("Cannot {} {}", method, path);
             let response = format!(
                 "HTTP/1.1 404\r\nContent-Length: {}\r\n\r\n{}",
