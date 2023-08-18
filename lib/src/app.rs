@@ -3,7 +3,6 @@ use path::DynamicPath;
 use route::Route;
 use router::Router;
 
-use std::collections::HashMap;
 use std::io::{prelude::*, BufReader};
 use std::net::{TcpListener, TcpStream};
 
